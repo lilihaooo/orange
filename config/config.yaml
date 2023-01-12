@@ -1,0 +1,46 @@
+server:
+  host: 127.0.0.1
+  port: 8888
+
+
+http:
+  baseUrl: 127.0.0.1
+  ip: 127.0.0.1
+  admin_port: 8888
+  api_port: 7777
+  gin_mode: debug
+
+mysql:
+  host: rm-2vc208dd40g94459wqo.mysql.cn-chengdu.rds.aliyuncs.com
+  port: 3306
+  user: lihaoselfhigh
+  password: lihao@123
+  db: orange
+  options:
+    loc: Asia%2FShanghai
+    charset: utf8mb4
+    collation: utf8mb4_unicode_ci
+
+
+
+redis:
+  host: 127.0.0.1
+  port: 6379
+  password: 123456
+  protocol: tcp
+  duration: 30
+  db: 4
+
+
+
+
+log:
+  level: debug
+  filename: ./log/school.log
+  max_size: 1000
+  max_age: 3600
+  max_backups: 5
+
+
+
+
