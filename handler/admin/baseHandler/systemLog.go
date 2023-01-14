@@ -26,3 +26,13 @@ func LogList(c *gin.Context) {
 	handlers.Success(c, response)
 
 }
+
+func LogStat(c *gin.Context) {
+	model := baseModel.AdminApiLog{}
+	data, err := model.StatLog()
+	if err != nil {
+		handlers.FailWithMessage(c, err.Error())
+		return
+	}
+	handlers.Success(c, data)
+}

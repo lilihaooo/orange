@@ -7,6 +7,7 @@ import (
 	"orange/middleware/jwt"
 	"orange/models"
 	"orange/models/baseModel"
+	"orange/utils/upload"
 	"strconv"
 )
 
@@ -128,8 +129,9 @@ func AdminDelete(c *gin.Context) {
 	admin, err := admin.GetAdmin()
 	if err != nil {
 		handlers.FailWithMessage(c, err.Error())
+		return
 	}
-	////删除该用户redis中的数据
+	//删除该用户redis中的数据
 	jwt.DestroyTokenByUserInfo(admin.ID, admin.Username, admin.Salt)
 
 	admin.DeleteAdmin()
@@ -148,7 +150,23 @@ func AdminRecover(c *gin.Context) {
 	handlers.Success(c, nil)
 }
 
-// 查找用户基本信息
+// 头像上传
+func AdminUpload(c *gin.Context) {
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		handlers.FailWithParams(c, nil)
+	}
+
+	//上传图片
+	path, err := upload.FileUpload(c, file, "admin")
+	if err != nil {
+		handlers.FailWithMessage(c, err.Error())
+		return
+	}
+	handlers.Success(c, path)
+}
+
+// 查找管理员基本信息
 func AdminInfo(c *gin.Context) {
 	var userInfo map[string]interface{}
 	userInfo = make(map[string]interface{})

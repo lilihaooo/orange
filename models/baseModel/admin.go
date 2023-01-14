@@ -2,79 +2,21 @@ package baseModel
 
 import (
 	"errors"
-	"github.com/go-ozzo/ozzo-validation/is"
-	"github.com/go-ozzo/ozzo-validation/v4"
 	"orange/help"
 	"orange/models"
-	"regexp"
+	"orange/utils/validCheck"
 	"strconv"
-	"strings"
 )
 
+// 使用 validator验证包
 type Admin struct {
 	models.Model
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" validate:"required,alphanum,min=4,max=8" label:"用户名"`
+	Password string `json:"password" validate:"required,min=6,max=8"`
 	Salt     string `json:"salt"`
-	Mobile   string `json:"mobile"`
-	Avatar   string `json:"avatar"`
-	Email    string `json:"email"`
-}
-
-// 去除空格符号
-func (m *Admin) trimField() error {
-	m.Username = strings.Trim(m.Username, " ")
-	m.Password = strings.Trim(m.Password, " ")
-	m.Mobile = strings.Trim(m.Mobile, " ")
-	if len(m.Mobile) != 11 {
-		return errors.New("请输入11位手机号")
-	}
-
-	// 正则表达式匹配字母或数字 不允许出现汉字
-	pattern := `^[A-Za-z0-9]{6,24}$`
-	matched, _ := regexp.MatchString(pattern, m.Username)
-	if !matched {
-		return errors.New("用户名必须为6-24位字母或数字")
-	}
-
-	if (m.ID != 0 && m.Password != "") || m.ID == 0 {
-		pattern = `^[_a-z0-9-]{6}`
-		matched, _ = regexp.MatchString(pattern, m.Password)
-		if !matched {
-			return errors.New("密码必须为至少6位字母或数字")
-		}
-	}
-
-	return nil
-}
-
-// 验证
-func (m Admin) Validate() error {
-	return validation.ValidateStruct(&m,
-		// 名称不得为空,且大小为1-50字
-		validation.Field(
-			&m.Username,
-			validation.Required.Error("用户名不得为空"),
-			validation.Length(1, 50).Error("名称为1-50个字母或数字")),
-		// 密码不得为空,且大于6字
-		validation.Field(
-			&m.Password,
-			validation.Required.Error("密码不得为空"),
-			validation.Length(6, 0).Error("密码不得小于6位")),
-		// 电话号码必须为11位
-		validation.Field(
-			&m.Mobile,
-			validation.Required.Error("电话号码不得为空"),
-			validation.Length(11, 11).Error("请输入11位手机号码")),
-		// 邮箱格式
-		validation.Field(
-			&m.Email,
-			is.Email.Error("邮箱格式错误")),
-		// 头像地址
-		validation.Field(
-			&m.Avatar,
-			is.URL.Error("头像地址格式错误")),
-	)
+	Mobile   string `json:"mobile" validate:"len=11" label:"电话"`
+	Avatar   string `json:"avatar"` //todo 头像格式未验证
+	Email    string `json:"email" validate:"email"`
 }
 
 // 查询管理员
@@ -89,7 +31,6 @@ func (m *Admin) GetAdminList(params map[string]interface{}) (admin []Admin, coun
 	if mobile, ok := params["mobile"]; ok && mobile.(string) != "" {
 		db = db.Where("mobile LIKE ?", "%"+mobile.(string)+"%")
 	}
-
 	// 是否删除
 	if isDeleted, ok := params["is_deleted"]; ok {
 		if isDeleted.(string) != "" {
@@ -130,10 +71,7 @@ func (m *Admin) GetAdmin() (admin Admin, err error) {
 
 // 添加管理员
 func (m *Admin) AddAdmin() (err error) {
-	if err := m.trimField(); err != nil {
-		return err
-	}
-	err = m.Validate()
+	err = validCheck.Validate(m)
 	if err != nil {
 		return err
 	}
@@ -141,16 +79,12 @@ func (m *Admin) AddAdmin() (err error) {
 	if !conn.Where("username = ?", m.Username).First(&m).RecordNotFound() {
 		return errors.New("用户名已存在")
 	}
-
+	// 手机号是否可以重复
 	// 生成密码盐
 	m.Salt = help.EncodeMD5(help.RandString(10))
 	// 对密码进行加密
 	m.Password = help.EncodeMD5(m.Password + m.Salt)
-	if err := conn.Create(m).Error; err != nil {
-		return err
-	}
-	return nil
-
+	return conn.Create(m).Error
 }
 
 // 删除管理员
@@ -165,7 +99,8 @@ func (m *Admin) RecoverAdmin() {
 
 // 更新管理员
 func (m *Admin) UpdateAdmin() (err error) {
-	if err := m.trimField(); err != nil {
+	err = validCheck.Validate(m)
+	if err != nil {
 		return err
 	}
 	if m.ID == 0 {

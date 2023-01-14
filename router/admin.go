@@ -49,6 +49,10 @@ func InitAdminRouter(config *settings.HttpConfig) *Router {
 	//r.POST("/uploadFile", handlers.UploadFile)
 	// 开启使用jwt中间件
 	r.Use(jwt.JWT())
+
+	// 管理员头像上传
+	r.POST("/upload", baseHandler.AdminUpload)
+
 	// 日志中间件 日志入库
 	r.Use(logToDb.Log())
 
@@ -103,12 +107,18 @@ func (router *Router) admin() {
 		router.g.PATCH("/administrator", baseHandler.AdminRecover)
 		// 系统日志查询
 		router.g.GET("/administrator/logs", baseHandler.LogList)
+		// 系统日志统计
+		router.g.GET("/administrator/stat", baseHandler.LogStat)
+
 	}
 }
 func (router *Router) Start() {
+	// 优雅的关闭
 	server := endless.NewServer(router.config, router.r)
 	server.BeforeBegin = func(add string) {
 		log.Printf("Actual pid is %d", syscall.Getpid())
 	}
+	// bind  listen accept
+	// go  c.serve()  2kb m:n gpm runtime
 	panic(server.ListenAndServe())
 }

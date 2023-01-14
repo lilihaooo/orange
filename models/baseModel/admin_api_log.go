@@ -51,3 +51,20 @@ func (m *AdminApiLog) GetLogList(params map[string]interface{}) (logs []AdminApi
 func (m *AdminApiLog) AddAdminApiLog() {
 	conn.Create(m)
 }
+
+type result struct {
+	Username string `json:"username"`
+	Date     string `json:"date"`
+	Count    int    `json:"count"`
+}
+
+// 统计
+func (m *AdminApiLog) StatLog() (*[]result, error) {
+	var res []result
+	db := conn.Model(&AdminApiLog{})
+	err := db.Select("username, DATE_FORMAT(created_at, '%d/%m/%y') as date, count(1) as count").Where("method = ?", "delete").Group("username, date").Scan(&res).Error
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}

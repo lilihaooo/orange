@@ -24,6 +24,10 @@ func Log() gin.HandlerFunc {
 		//fmt.Println(string(body))
 
 		go func(c *gin.Context, content string) {
+			// pprof 性能分析
+			// 1.找文件  如果生成文件
+			// 2.写入文件
+			// 4.关闭文件
 			//roles, _ := c.Get("userRole")
 			userId, _ := c.Get("userId")
 			Username, _ := c.Get("username")
@@ -45,6 +49,7 @@ func Log() gin.HandlerFunc {
 			}
 			tmp.AddAdminApiLog()
 		}(c, string(body))
+
 		c.Next()
 	}
 }

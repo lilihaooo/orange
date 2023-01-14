@@ -15,6 +15,11 @@ type AppConfig struct {
 	*HttpConfig  `mapstructure:"http"`
 	*MySQLConfig `mapstructure:"mysql"`
 	*RedisConfig `mapstructure:"redis"`
+	*EnvConfig   `mapstructure:"env"`
+}
+
+type EnvConfig struct {
+	Crontab bool `mapstructure:"crontab"`
 }
 
 type HttpConfig struct {
@@ -43,8 +48,6 @@ type RedisConfig struct {
 	Port     string `mapstructure:"port"`
 	Password string `mapstructure:"password"`
 	Protocol string `mapstructure:"protocol"`
-	Duration int    `mapstructure:"duration"`
-	DB       int    `mapstructure:"db"`
 }
 
 type LogConfig struct {
