@@ -3,9 +3,9 @@ package crontab
 import (
 	"bytes"
 	"fmt"
+	"github.com/lilihaooo/orange/settings"
+	"github.com/lilihaooo/orange/utils/file"
 	"github.com/robfig/cron/v3"
-	"orange/settings"
-	"orange/utils/file"
 	"os"
 	"os/exec"
 	"strconv"
@@ -15,7 +15,7 @@ import (
 // 每天0点0分运行一次mysql备份
 func mysqlDump() {
 	c := cron.New()
-	_, err := c.AddFunc("@every 100s", func() {
+	_, err := c.AddFunc("@every 1000s", func() {
 		run()
 	})
 	if err != nil {
@@ -34,8 +34,7 @@ func run() {
 	// 生成在文件路径
 	filePath := pwd + "/storage/database/" + time.Now().Format("2006-01-02") + "/"
 	if err := file.MkDir(filePath); err != nil {
-		// todo 打印 和logWrite的区别
-		//logWrite.Error("定时备份数据库脚本失败,生成文件失败1：", err.Error())
+		logWrite.Error("定时备份数据库脚本失败,生成文件失败1：", err.Error())
 		fmt.Println("定时备份数据库脚本失败,生成文件失败1：", err.Error())
 	}
 	realFile := filePath + fileName
@@ -52,7 +51,6 @@ func execDump(dbHost, dbPort, dbUser, dbPassword, dbName, filePath string) {
 	commandDump := "mysqldump --opt -h " + dbHost + " -P " + dbPort + " -u" + dbUser + " -p" + dbPassword + " " + dbName + " > " + filePath
 	fmt.Println(commandDump)
 
-	// todo windows上不能运行定时任务?
 	cmd := exec.Command("/bin/sh", "-c", commandDump)
 	// 获取报错输出内容
 	var out bytes.Buffer
@@ -62,7 +60,7 @@ func execDump(dbHost, dbPort, dbUser, dbPassword, dbName, filePath string) {
 	err := cmd.Run()
 	// 如果报错 记录日志
 	if err != nil {
-		//logWrite.Error("定时备份数据库脚本失败2：", err.Error())
+		logWrite.Error("定时备份数据库脚本失败2：", err.Error())
 		fmt.Println("定时备份数据库脚本失败2：", err.Error())
 	} else {
 		fmt.Println("定时备份数据库脚本成功:", out.String())

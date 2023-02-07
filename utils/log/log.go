@@ -1,12 +1,13 @@
-package help
+package log
 
 import (
 	"errors"
-	"orange/utils/file"
+	"github.com/lilihaooo/orange/utils/file"
+	string2 "github.com/lilihaooo/orange/utils/str"
 	"os"
 )
 
-// 根据日期获取新的日志文件
+// LogFileWriter 根据日期获取新的日志文件
 type LogFileWriter struct {
 	File *os.File
 	Date string
@@ -18,7 +19,7 @@ func NewLogFileWriter(endpoint string, category string) *LogFileWriter {
 	var log LogFileWriter
 	var err error
 	// 获取年月日
-	log.Date = CurrentTimeYMD()
+	log.Date = string2.CurrentTimeYMDHIS()
 	// 根据endpoint来判断是前端api还是后端api
 	switch endpoint {
 	case "backend":

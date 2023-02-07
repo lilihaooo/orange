@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
+	"github.com/lilihaooo/orange/handler/admin/baseHandler"
+	"github.com/lilihaooo/orange/handler/admin/couponHandler"
+	"github.com/lilihaooo/orange/middleware/cors"
+	"github.com/lilihaooo/orange/middleware/jwt"
+	logToDb "github.com/lilihaooo/orange/middleware/log"
+	"github.com/lilihaooo/orange/settings"
+	log2 "github.com/lilihaooo/orange/utils/log"
 	"github.com/sirupsen/logrus"
 	ginlogrus "github.com/toorop/gin-logrus"
 	"log"
 	"net/http"
-	"orange/handler/admin/baseHandler"
-	"orange/help"
-	"orange/middleware/cors"
-	"orange/middleware/jwt"
-	logToDb "orange/middleware/log"
-	"orange/settings"
 	"syscall"
 )
 
@@ -34,9 +35,8 @@ func InitAdminRouter(config *settings.HttpConfig) *Router {
 	log := logrus.New()
 	// 设置日志输出 生产环境生成日志文件
 	if mode != "debug" {
-		log.SetOutput(help.NewLogFileWriter("backend", "api"))
+		log.SetOutput(log2.NewLogFileWriter("backend", "api"))
 	}
-	//todo log
 	r.Use(ginlogrus.Logger(log))
 	//静态文件怎么处理
 	r.StaticFS("/storage", http.Dir("storage"))
@@ -45,6 +45,7 @@ func InitAdminRouter(config *settings.HttpConfig) *Router {
 	// -----------------------不需要权限的路由-----------------------//
 	// 获取token
 	r.POST("/login", baseHandler.Login)
+	r.GET("/test", baseHandler.Test)
 	// 上传文件
 	//r.POST("/uploadFile", handlers.UploadFile)
 	// 开启使用jwt中间件
@@ -88,6 +89,8 @@ func InitAdminRouter(config *settings.HttpConfig) *Router {
 	//router.user()
 	// 管理员
 	router.admin()
+	// 优惠券
+	router.coupon()
 	return router
 }
 
@@ -108,8 +111,33 @@ func (router *Router) admin() {
 		// 系统日志查询
 		router.g.GET("/administrator/logs", baseHandler.LogList)
 		// 系统日志统计
-		router.g.GET("/administrator/stat", baseHandler.LogStat)
+		router.g.GET("/administrator/stat", baseHandler.LogStatistics)
 
+	}
+}
+
+// 优惠券相关
+func (router *Router) coupon() {
+	router.g.Use()
+	{
+		// 优惠券信息
+		coupon := couponHandler.NewCoupon()
+		router.g.POST("/coupon", coupon.Add)
+		router.g.DELETE("/coupon", coupon.Del)
+		router.g.PUT("/coupon", coupon.Edit)
+		router.g.GET("/coupon", coupon.List)
+		router.g.GET("/coupon/stateChange", coupon.StateChange)
+
+		// 优惠券预发
+		couPreIss := couponHandler.NewCouponPreIssuance()
+		router.g.POST("/couPreIss", couPreIss.Add)
+		router.g.DELETE("/couPreIss", couPreIss.Del)
+		router.g.PUT("/couPreIss", couPreIss.Edit)
+		router.g.GET("/couPreIss", couPreIss.List)
+		router.g.GET("/couPreIss/stateChange", couPreIss.StateChange)
+
+		// 优惠券发放日志
+		router.g.GET("/couIssLog", couponHandler.CouIssLogList)
 	}
 }
 func (router *Router) Start() {

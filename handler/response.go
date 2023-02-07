@@ -3,9 +3,9 @@ package handlers
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	log2 "github.com/lilihaooo/orange/utils/log"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"orange/help"
 )
 
 func Success(c *gin.Context, data interface{}) {
@@ -39,9 +39,9 @@ func FailWithParams(c *gin.Context, error error) {
 
 func FailWithSystem(c *gin.Context, err error) {
 	fmt.Println(err)
-	log := log.New()
+	//log := log.New()
 	// 设置日志输出
-	log.SetOutput(help.NewLogFileWriter("system", "error"))
+	log.SetOutput(log2.NewLogFileWriter("system", "error"))
 	log.Error(err)
 	c.JSON(http.StatusOK, gin.H{
 		"code":    50000,

@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/lilihaooo/orange/db/conn/mysql"
+	"github.com/lilihaooo/orange/db/conn/redis"
+	"github.com/lilihaooo/orange/models/conn"
+	"github.com/lilihaooo/orange/settings"
 	"github.com/spf13/cobra"
-	"orange/db/conn/mysql"
-	"orange/db/conn/redis"
-	"orange/models/conn"
-	"orange/settings"
 	"os"
 )
 

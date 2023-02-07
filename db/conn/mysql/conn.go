@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/lilihaooo/orange/settings"
 	log "github.com/sirupsen/logrus"
-	"orange/settings"
 	"time"
 )
 
@@ -23,7 +23,7 @@ var DB *DBManager
 func Connect(settings *settings.MySQLConfig) *DBManager {
 	db := &DBManager{}
 	conn := newConn(settings)
-	// todo 最大连接要设置成mysql最大时长的一半
+	// 最大连接要设置成mysql最大时长的一半
 	conn.DB().SetConnMaxLifetime(time.Minute)
 	db.DefaultConn = conn
 	db.DefaultConn.LogMode(true)

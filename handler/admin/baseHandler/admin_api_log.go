@@ -2,14 +2,14 @@ package baseHandler
 
 import (
 	"github.com/gin-gonic/gin"
-	"orange/handler"
-	"orange/help"
-	"orange/models/baseModel"
+	"github.com/lilihaooo/orange/handler"
+	"github.com/lilihaooo/orange/models/baseModel"
+	search2 "github.com/lilihaooo/orange/utils/search"
 )
 
 func LogList(c *gin.Context) {
 	//分页map
-	search := help.SearchParamsFormat(c)
+	search := search2.SearchParamsFormat(c)
 	search["start_time"] = c.Query("start_time")
 	search["end_time"] = c.Query("end_time")
 
@@ -27,9 +27,9 @@ func LogList(c *gin.Context) {
 
 }
 
-func LogStat(c *gin.Context) {
+func LogStatistics(c *gin.Context) {
 	model := baseModel.AdminApiLog{}
-	data, err := model.StatLog()
+	data, err := model.StatisticsLog()
 	if err != nil {
 		handlers.FailWithMessage(c, err.Error())
 		return

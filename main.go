@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/lilihaooo/orange/cmd" //执行保中的init
 	log "github.com/sirupsen/logrus"
-	"orange/cmd" //执行保中的init
 	"os"
 )
 

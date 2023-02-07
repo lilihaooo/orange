@@ -20,7 +20,7 @@ func (AdminApiLog) TableName() string {
 	return "admin_api_log"
 }
 
-// todo  为什么这里要用一个函数返回 不直接用
+// 为什么这里要用一个函数返回 不直接用: 可以设置默认值...
 func NewAdminApiLogModel() AdminApiLog {
 	return AdminApiLog{}
 }
@@ -40,7 +40,7 @@ func (m *AdminApiLog) GetLogList(params map[string]interface{}) (logs []AdminApi
 	// todo count是否应该放在where 后面
 	db.Count(&count)
 
-	err = db.Offset((params["page"].(int) - 1) * params["pageSize"].(int)).Limit(params["pageSize"]).Order("id DESC").Find(&logs).Error
+	err = db.Offset((params["search"].(int) - 1) * params["pageSize"].(int)).Limit(params["pageSize"]).Order("id DESC").Find(&logs).Error
 	if err != nil {
 		return
 	}
@@ -59,7 +59,7 @@ type result struct {
 }
 
 // 统计
-func (m *AdminApiLog) StatLog() (*[]result, error) {
+func (m *AdminApiLog) StatisticsLog() (*[]result, error) {
 	var res []result
 	db := conn.Model(&AdminApiLog{})
 	err := db.Select("username, DATE_FORMAT(created_at, '%d/%m/%y') as date, count(1) as count").Where("method = ?", "delete").Group("username, date").Scan(&res).Error

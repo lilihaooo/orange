@@ -2,7 +2,7 @@ package redis
 
 import (
 	"github.com/garyburd/redigo/redis"
-	"orange/settings"
+	"github.com/lilihaooo/orange/settings"
 )
 
 var Pool *redis.Pool
@@ -15,8 +15,9 @@ func InitRedisConn() {
 		IdleTimeout: 300,
 		Dial: func() (redis.Conn, error) {
 			address := settings.Conf.RedisConfig.Host + ":" + settings.Conf.RedisConfig.Port
-			return redis.Dial("tcp", address, redis.DialPassword(settings.Conf.RedisConfig.Password))
-
+			res, err := redis.Dial(settings.Conf.RedisConfig.Protocol, address, redis.DialPassword(settings.Conf.RedisConfig.Password))
+			res.Do("select db" + settings.Conf.RedisConfig.DB)
+			return res, err
 		},
 	}
 }

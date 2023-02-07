@@ -3,8 +3,8 @@ package log
 import (
 	"bytes"
 	"github.com/gin-gonic/gin"
+	"github.com/lilihaooo/orange/models/baseModel"
 	"io/ioutil"
-	"orange/models/baseModel"
 	"time"
 )
 
@@ -21,7 +21,7 @@ func Log() gin.HandlerFunc {
 		body, _ := c.GetRawData()
 		// 将原body塞回去  把读过的字节流重新放到body
 		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-		//fmt.Println(string(body))
+		//fmt.Println(str(body))
 
 		go func(c *gin.Context, content string) {
 			// pprof 性能分析
@@ -33,7 +33,7 @@ func Log() gin.HandlerFunc {
 			Username, _ := c.Get("username")
 			t := time.Now()
 			//roleString := ""
-			//for _, v := range roles.([]string) {
+			//for _, v := range roles.([]str) {
 			//	roleString += v + ","
 			//}
 			// 添加到日志表

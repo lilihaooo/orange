@@ -1,19 +1,24 @@
 package baseHandler
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
-	handlers "orange/handler"
-	"orange/help"
-	"orange/middleware/jwt"
-	"orange/models"
-	"orange/models/baseModel"
-	"orange/utils/upload"
+	handlers "github.com/lilihaooo/orange/handler"
+	"github.com/lilihaooo/orange/middleware/jwt"
+	"github.com/lilihaooo/orange/models"
+	"github.com/lilihaooo/orange/models/baseModel"
+	search2 "github.com/lilihaooo/orange/utils/search"
+	"github.com/lilihaooo/orange/utils/upload"
 	"strconv"
 )
 
 type adminLogin struct {
 	Username string `form:"username" json:"username" xml:"username"  binding:"required"`
 	Password string `form:"password" json:"password" xml:"password" binding:"required"`
+}
+
+func Test(c *gin.Context) {
+	handlers.FailWithSystem(c, errors.New("test"))
 }
 
 // 用户登录
@@ -61,7 +66,7 @@ func Logout(c *gin.Context) {
 }
 
 func AdminList(c *gin.Context) {
-	search := help.SearchParamsFormat(c)
+	search := search2.SearchParamsFormat(c)
 	// 查询是否有username、name、mobile等查询参数
 	search["username"] = c.Query("username")
 	search["mobile"] = c.Query("mobile")
@@ -86,9 +91,7 @@ func AdminAdd(c *gin.Context) {
 		handlers.FailWithParams(c, err)
 		return
 	}
-
 	err = admin.AddAdmin()
-
 	if err != nil {
 		handlers.FailWithMessage(c, err.Error())
 		return

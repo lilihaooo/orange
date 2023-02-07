@@ -2,9 +2,9 @@ package baseModel
 
 import (
 	"errors"
-	"orange/help"
-	"orange/models"
-	"orange/utils/validCheck"
+	"github.com/lilihaooo/orange/models"
+	string2 "github.com/lilihaooo/orange/utils/str"
+	"github.com/lilihaooo/orange/utils/validCheck"
 	"strconv"
 )
 
@@ -44,7 +44,7 @@ func (m *Admin) GetAdminList(params map[string]interface{}) (admin []Admin, coun
 		}
 	}
 	db.Count(&count)
-	err = db.Offset((params["page"].(int) - 1) * params["pageSize"].(int)).Limit(params["pageSize"]).Find(&admin).Error
+	err = db.Offset((params["search"].(int) - 1) * params["pageSize"].(int)).Limit(params["pageSize"]).Find(&admin).Error
 	if err != nil {
 		return
 	}
@@ -81,9 +81,9 @@ func (m *Admin) AddAdmin() (err error) {
 	}
 	// 手机号是否可以重复
 	// 生成密码盐
-	m.Salt = help.EncodeMD5(help.RandString(10))
+	m.Salt = string2.EncodeMD5(string2.RandString(10))
 	// 对密码进行加密
-	m.Password = help.EncodeMD5(m.Password + m.Salt)
+	m.Password = string2.EncodeMD5(m.Password + m.Salt)
 	return conn.Create(m).Error
 }
 
@@ -113,7 +113,7 @@ func (m *Admin) UpdateAdmin() (err error) {
 	}
 	if m.Password != "" {
 		// 对密码进行加密
-		adminDb.Password = help.EncodeMD5(m.Password + adminDb.Salt)
+		adminDb.Password = string2.EncodeMD5(m.Password + adminDb.Salt)
 	}
 
 	//之所以要赋值给新的结构体变量是因为只修改一部分字段,而不是全部字段1
@@ -130,7 +130,7 @@ func (m *Admin) UpdateAdmin() (err error) {
 
 // 检测密码
 func CheckPassword(password, salt, dbpassword string) bool {
-	if dbpassword == help.EncodeMD5(password+salt) {
+	if dbpassword == string2.EncodeMD5(password+salt) {
 		return true
 	}
 	return false

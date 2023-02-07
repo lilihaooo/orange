@@ -48,6 +48,7 @@ type RedisConfig struct {
 	Port     string `mapstructure:"port"`
 	Password string `mapstructure:"password"`
 	Protocol string `mapstructure:"protocol"`
+	DB       string `mapstructure:"db"`
 }
 
 type LogConfig struct {

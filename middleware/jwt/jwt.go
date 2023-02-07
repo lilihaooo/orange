@@ -4,9 +4,9 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/gomodule/redigo/redis"
+	myRedis "github.com/lilihaooo/orange/db/conn/redis"
+	string2 "github.com/lilihaooo/orange/utils/str"
 	"net/http"
-	myRedis "orange/db/conn/redis"
-	"orange/help"
 	"strconv"
 	"strings"
 	"time"
@@ -59,7 +59,7 @@ func makeViewToken(id int64, username string, salt string) string {
 	//key := "authorization_" + strconv.FormatInt(id, 10) + "_" + "_" + help.CurrentTimeYMDHIS()
 	key := "authorization_" + strconv.FormatInt(id, 10) + "_" + username + "_" + salt
 	//key : 前缀加加密后的key
-	return help.EncodeMD5(key)
+	return string2.EncodeMD5(key)
 }
 
 func ParseToken(token string) (*Claims, error) {
@@ -106,9 +106,8 @@ func JWT() gin.HandlerFunc {
 		var code int
 
 		code = 20000
-		token := ""
 		// 查询参数token
-		token = c.DefaultQuery("token", "")
+		token := c.DefaultQuery("token", "")
 		// 如果不存在 从header头读取信息
 		if token == "" {
 			// 读取Authorization
