@@ -11,31 +11,43 @@ import (
 
 type Coupon struct {
 	models.Model
-	Name        string  `json:"name" validate:"required,max=20"`      // 名称
-	Description string  `json:"description" validate:"max=100"`       // 描述
-	Money       float64 `json:"money" validate:"required,lte=10000"`  // 券面金额
-	LowerMoney  float64 `json:"lower_money" validate:"lte=10000"`     // 启用金额
-	AdminId     int64   `json:"admin_id" validate:"required"`         // 管理员id
-	Tip         string  `json:"tip" validate:"max=50"`                // 券面提示
-	Total       int64   `json:"total" validate:"required"`            // 已发数量
-	UsedNum     int64   `json:"used_num" validate:"required"`         // 使用数量
-	StartTime   string  `json:"start_time" validate:"required,max=5"` // 抢券开始时间
-	EndTime     string  `json:"end_time" validate:"required,max=5"`   // 抢券结束时间
-	Status      int     `json:"status" validate:"required,lte=2"`     // 状态
+	Name        string  `json:"name" validate:"required,max=20" label:"名称"`          // 名称
+	Description string  `json:"description" validate:"max=100" label:"描述"`           // 描述
+	Money       float64 `json:"money" validate:"required,lte=10000" label:"券面金额"`    // 券面金额
+	LowerMoney  float64 `json:"lower_money" validate:"lte=10000" label:"启用金额"`       // 启用金额
+	AdminId     int64   `json:"admin_id" validate:"required" label:"管理员id"`          // 管理员id
+	Tip         string  `json:"tip" validate:"max=50" label:"券面提示"`                  // 券面提示
+	Total       int64   `json:"total" label:"已发数量"`                                  // 已发数量
+	UsedNum     int64   `json:"used_num" label:"使用数量"`                               // 使用数量
+	StartTime   string  `json:"start_time" validate:"required,max=5" label:"抢券开始时间"` // 抢券开始时间
+	EndTime     string  `json:"end_time" validate:"required,max=5" label:"抢券结束时间"`   // 抢券结束时间
+	Status      int     `json:"status" validate:"required,lte=2" label:"状态"`         // 状态
 }
+
+const (
+	CouponStatusOK = 1
+)
 
 // CouponCreate 添加优惠券
 func (c *Coupon) CouponCreate() (err error) {
-	//验证数据
+	//验证adminId
 	err = validCheck.Validate(c)
 	if err != nil {
 		return err
 	}
+	if !validCheck.StrISMs(c.StartTime) || !validCheck.StrISMs(c.EndTime) {
+		return errors.New("抢券时间格式错误")
+	}
+	c.UsedNum = 0
+	c.Total = 0
 	return conn.Create(&c).Error
 }
 
 // CouponDelete 删除优惠券
 func (c *Coupon) CouponDelete(id string) (err error) {
+	if conn.Where("id = ?", id).First(&c).RowsAffected < 1 {
+		return errors.New("记录不存在")
+	}
 	return conn.Where("id = ?", id).Delete(&c).Error
 }
 
@@ -47,7 +59,7 @@ func (c *Coupon) CouponUpdate() (err error) {
 		return err
 	}
 	newCoupon := new(Coupon)
-	if conn.Where("id = ?", c.ID).Find(newCoupon).RowsAffected == 0 {
+	if conn.Where("id = ?", c.ID).First(newCoupon).RowsAffected == 0 {
 		return errors.New("优惠券不存在")
 	}
 
@@ -65,7 +77,7 @@ func (c *Coupon) CouponUpdate() (err error) {
 }
 
 // CouponList 优惠券列表
-func (c *Coupon) CouponList(params map[string]interface{}) (list []Coupon, count int, err error) {
+func (c *Coupon) CouponList(params map[string]interface{}) (list []Coupon, count int64, err error) {
 	db := conn.Model(&Coupon{})
 	// 筛选
 	if params["name"] != "" {
@@ -134,8 +146,8 @@ func (c *Coupon) CouponList(params map[string]interface{}) (list []Coupon, count
 	}
 
 	db.Count(&count)
-	err = db.Offset((params["search"].(int) - 1) * params["pageSize"].(int)).
-		Limit(params["pageSize"]).
+	err = db.Offset((params["page"].(int) - 1) * params["pageSize"].(int)).
+		Limit(params["pageSize"].(int)).
 		Order(sortStr).
 		Find(&list).Error
 	return list, count, err
@@ -144,7 +156,7 @@ func (c *Coupon) CouponList(params map[string]interface{}) (list []Coupon, count
 
 // CouponStateChange 优惠券状态修改
 func (c *Coupon) CouponStateChange(id string) (err error) {
-	if conn.Where("id = ?", id).Find(&c).RowsAffected == 0 {
+	if conn.Where("id = ?", id).First(&c).RowsAffected == 0 {
 		return errors.New("优惠券不存在")
 	}
 	var now int
@@ -169,19 +181,30 @@ func IssueCoupons(logWrite *logrus.Logger) error {
 	date := string2.CurrentTimeYMD()
 	// 获得时分
 	time := string2.CurrentTimeHI()
-	time = "17:30"
 	// 开始时间结束时间包含当前日期的预发券ids
 	var issue []Issue
-	sql := `select 
-coupon_pre_issuance.coupon_id, time_point, num
-from coupon_pre_issuance 
-inner join 
-coupon 
-on coupon.id = coupon_pre_issuance.coupon_id 
-where coupon_pre_issuance.start_time <= ? and coupon_pre_issuance.end_time > ? 
-and coupon_pre_issuance.status = 1 
-and coupon.status = 1`
-	err := conn.Raw(sql, date, date).Scan(&issue).Error
+
+	// 方案一: 使用原生sql
+	//	sql := `select
+	//coupon_pre_issuance.coupon_id, time_point, num
+	//from coupon_pre_issuance
+	//inner join
+	//coupon
+	//on coupon.id = coupon_pre_issuance.coupon_id
+	//where coupon_pre_issuance.start_time <= ? and coupon_pre_issuance.end_time >= ?
+	//and coupon_pre_issuance.status = 1
+	//and coupon.status = 1`
+	//	err := conn.Raw(sql, date, date).Scan(&issue).Error
+
+	// 方案二: gorm关联查询
+	err := conn.Model(&CouponPreIssuance{}).
+		Select("coupon_pre_issuance.coupon_id, time_point, num").
+		Joins("inner join coupon on coupon.id = coupon_pre_issuance.coupon_id").
+		Where("coupon_pre_issuance.start_time <= ?", date).
+		Where("coupon_pre_issuance.end_time >= ?", date).
+		Where("coupon_pre_issuance.status = ?", CouponStatusOK).
+		Where("coupon.status = ?", CouponStatusOK).
+		Scan(&issue).Error
 	if err != nil {
 		return err
 	}
@@ -221,7 +244,7 @@ func action(issue *Issue) error {
 	logInfo := CouponIssuanceLog{}
 	logInfo.CouponId = issue.CouponId
 	logInfo.Num = issue.Num
-	logInfo.AdminId = 1 // todo 应该是添加预发信息的admin, 但是预发表没有这个字段!!
+	logInfo.AdminId = coupon.AdminId // todo 应该是添加预发信息的admin, 但是预发表没有这个字段!!
 	logInfo.PreNum = preNum
 	logInfo.PostNum = coupon.Total
 	err = tx.Create(&logInfo).Error

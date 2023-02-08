@@ -122,22 +122,23 @@ func (router *Router) coupon() {
 	{
 		// 优惠券信息
 		coupon := couponHandler.NewCoupon()
-		router.g.POST("/coupon", coupon.Add)
-		router.g.DELETE("/coupon", coupon.Del)
-		router.g.PUT("/coupon", coupon.Edit)
 		router.g.GET("/coupon", coupon.List)
+		router.g.POST("/coupon", coupon.Add)
+		router.g.PUT("/coupon", coupon.Edit)
+		router.g.DELETE("/coupon", coupon.Del)
 		router.g.GET("/coupon/stateChange", coupon.StateChange)
 
 		// 优惠券预发
 		couPreIss := couponHandler.NewCouponPreIssuance()
-		router.g.POST("/couPreIss", couPreIss.Add)
-		router.g.DELETE("/couPreIss", couPreIss.Del)
-		router.g.PUT("/couPreIss", couPreIss.Edit)
 		router.g.GET("/couPreIss", couPreIss.List)
+		router.g.POST("/couPreIss", couPreIss.Add)
+		router.g.PUT("/couPreIss", couPreIss.Edit)
+		router.g.DELETE("/couPreIss", couPreIss.Del)
 		router.g.GET("/couPreIss/stateChange", couPreIss.StateChange)
 
 		// 优惠券发放日志
 		router.g.GET("/couIssLog", couponHandler.CouIssLogList)
+
 	}
 }
 func (router *Router) Start() {

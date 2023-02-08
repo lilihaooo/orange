@@ -22,7 +22,7 @@ func couponIssuance() {
 	*/
 
 	c := cron.New()
-	_, err := c.AddFunc("@every 10s", func() {
+	_, err := c.AddFunc("@every 1m", func() {
 		err := couponModel.IssueCoupons(logWrite)
 		if err != nil {
 			logWrite.Error("发券脚本执行失败:" + err.Error())

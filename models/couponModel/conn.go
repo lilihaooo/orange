@@ -2,9 +2,10 @@ package couponModel
 
 import (
 	"github.com/lilihaooo/orange/db/conn/mysql"
+	"gorm.io/gorm"
 )
 
-var conn mysql.Conn
+var conn *gorm.DB
 
 func InitConn() {
 	// 构建coupon数据库

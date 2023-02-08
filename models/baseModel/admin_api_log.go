@@ -26,7 +26,7 @@ func NewAdminApiLogModel() AdminApiLog {
 }
 
 // 查询公告
-func (m *AdminApiLog) GetLogList(params map[string]interface{}) (logs []AdminApiLog, count int, err error) {
+func (m *AdminApiLog) GetLogList(params map[string]interface{}) (logs []AdminApiLog, count int64, err error) {
 	db := conn.Model(&AdminApiLog{})
 	// start_time
 	if start_time, ok := params["start_time"]; ok && start_time.(string) != "" {
@@ -40,7 +40,7 @@ func (m *AdminApiLog) GetLogList(params map[string]interface{}) (logs []AdminApi
 	// todo count是否应该放在where 后面
 	db.Count(&count)
 
-	err = db.Offset((params["search"].(int) - 1) * params["pageSize"].(int)).Limit(params["pageSize"]).Order("id DESC").Find(&logs).Error
+	err = db.Offset((params["page"].(int) - 1) * params["pageSize"].(int)).Limit(params["pageSize"].(int)).Order("id DESC").Find(&logs).Error
 	if err != nil {
 		return
 	}

@@ -2,47 +2,47 @@ package mysql
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/lilihaooo/orange/settings"
-	log "github.com/sirupsen/logrus"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 	"time"
 )
 
-type Conn = *gorm.DB
-type DefaultConn = Conn
+var _db *gorm.DB
 
-// 数据控制结构体
-type DBManager struct {
-	DefaultConn
-	Connections map[string]Conn
-}
+func Connect(config *settings.MySQLConfig) {
 
-var DB *DBManager
-
-func Connect(settings *settings.MySQLConfig) *DBManager {
-	db := &DBManager{}
-	conn := newConn(settings)
-	// 最大连接要设置成mysql最大时长的一半
-	conn.DB().SetConnMaxLifetime(time.Minute)
-	db.DefaultConn = conn
-	db.DefaultConn.LogMode(true)
-	//禁用复数形式
-	db.SingularTable(true)
-	DB = db
-	return db
-}
-
-func newConn(config *settings.MySQLConfig) Conn {
-	args := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=True&%s",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=True&%s",
 		config.User, config.Password, config.Host, config.Port, config.DB, config.Options)
-	db, err := gorm.Open("mysql", args)
+
+	// 声明err变量，下面不能使用:=赋值运算符，否则_db变量会当成局部变量，导致外部无法访问_db变量
+	var err error
+	//连接MYSQL, 获得DB类型实例，用于后面的数据库读写操作。
+	_db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true,
+		},
+		Logger: logger.Default.LogMode(logger.Info), // 打印每条sql
+	})
 	if err != nil {
-		log.Fatal(err)
+		panic("连接数据库失败, error=" + err.Error())
 	}
-	return db
+
+	sqlDB, _ := _db.DB()
+
+	// SetMaxIdleConns 设置空闲连接池中连接的最大数量
+	sqlDB.SetMaxIdleConns(10)
+
+	// SetMaxOpenConns 设置打开数据库连接的最大数量。
+	sqlDB.SetMaxOpenConns(100)
+
+	// SetConnMaxLifetime 设置了连接可复用的最大时间。
+	sqlDB.SetConnMaxLifetime(time.Minute)
 }
 
-func GetConn() Conn {
-	return DB.DefaultConn
+// 不用担心协程并发使用同样的db对象会共用同一个连接，db对象在调用他的方法的时候会从数据库连接池中获取新的连接
+func GetConn() *gorm.DB {
+	return _db
 }

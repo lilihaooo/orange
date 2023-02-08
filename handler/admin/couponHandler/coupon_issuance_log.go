@@ -9,6 +9,8 @@ import (
 
 func CouIssLogList(c *gin.Context) {
 	search := search2.SearchParamsFormat(c)
+	search["begin_time"] = c.Query("begin_time")
+	search["end_time"] = c.Query("end_time")
 	model := &couponModel.CouponIssuanceLog{}
 	list, total, err := model.CouIssLogList(search)
 	if err != nil {

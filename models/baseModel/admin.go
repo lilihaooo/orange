@@ -20,7 +20,7 @@ type Admin struct {
 }
 
 // 查询管理员
-func (m *Admin) GetAdminList(params map[string]interface{}) (admin []Admin, count int, err error) {
+func (m *Admin) GetAdminList(params map[string]interface{}) (admin []Admin, count int64, err error) {
 	//Unscoped()  查询结果包含被软删除的
 	db := conn.Model(&Admin{}).Unscoped()
 	// username
@@ -44,7 +44,7 @@ func (m *Admin) GetAdminList(params map[string]interface{}) (admin []Admin, coun
 		}
 	}
 	db.Count(&count)
-	err = db.Offset((params["search"].(int) - 1) * params["pageSize"].(int)).Limit(params["pageSize"]).Find(&admin).Error
+	err = db.Offset((params["page"].(int) - 1) * params["pageSize"].(int)).Limit(params["pageSize"].(int)).Find(&admin).Error
 	if err != nil {
 		return
 	}
@@ -76,7 +76,7 @@ func (m *Admin) AddAdmin() (err error) {
 		return err
 	}
 	// 用户必须唯一
-	if !conn.Where("username = ?", m.Username).First(&m).RecordNotFound() {
+	if conn.Where("username = ?", m.Username).First(&m).RowsAffected > 0 {
 		return errors.New("用户名已存在")
 	}
 	// 手机号是否可以重复
